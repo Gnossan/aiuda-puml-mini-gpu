@@ -69,6 +69,29 @@ const Editor: React.FC<EditorProps> = ({
     }
   };
 
+  const handleExportSvg = async () => {
+    if (!previewSrc) return;
+    
+    try {
+      const response = await fetch(previewSrc, { mode: 'cors' });
+      if (!response.ok) throw new Error('Failed to fetch SVG');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'aiuda-diagram.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
       {/* AI-Assistent panel */}
@@ -150,8 +173,28 @@ const Editor: React.FC<EditorProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: '#fafafa',
+            position: 'relative',
           }}
         >
+          <button
+            onClick={handleExportSvg}
+            disabled={!previewSrc}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              padding: '6px 12px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: previewSrc ? 'pointer' : 'not-allowed',
+              fontSize: '12px',
+              zIndex: 10,
+            }}
+          >
+            📥 Exportera SVG
+          </button>
           {previewSrc ? (
             <img
               src={previewSrc}
