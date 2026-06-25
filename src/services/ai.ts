@@ -1,223 +1,196 @@
-import React, { useState, useRef } from 'react';
-import { generatePlantUmlFromDescription, explainPlantUmlToText } from '../services/ai';
+// AI-assistent: Genererar PlantUML-kod från naturlig språkbildskrivning
+// ================================================================
+// Konfiguration av faktisk LLM:
+// 1. Skapa en .env-fil med t.ex.: VITE_OPENAI_API_KEY=sk-din-api-nyckel-här
+// 2. Aktivera OpenAI-koden nedan (avkommentera) och ta bort placeholder-logiken
+// 3. Installera nödvändiga paket vid behov: npm i openai (valfritt)
 
-export interface EditorProps {
-  initialCode?: string;
+export async function generatePlantUmlFromDescription(description: string): Promise<string> {
+  /*
+  // === FAKTISK OPENAI-INTEGRATION (avkommentera och sätt in API-nyckel) ===
+  
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'AI-API-nyckel saknas. Skapa en .env-fil med VITE_OPENAI_API_KEY="sk-din-nyckel-här".'
+    );
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Du är en expert på PlantUML. Generera ENDAST ren PlantUML-kod. Inga förklaringar, inga markdown-blok med ```plantuml. Börja med @startuml och avsluta med @enduml.',
+        },
+        {
+          role: 'user',
+          content: `Generera PlantUML-kod för detta diagram:\n${description}`,
+        },
+      ],
+      temperature: 0.2,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`AI API misslyckades (${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  let code = data.choices?.[0]?.message?.content || '';
+  
+  // Ta bort eventuella markdown-blok om modellen ändå lägger till dem
+  code = code.replace(/\s*```(plantuml|plantUML|puml)?\s*/g, '').replace(/\s*```\s*/g, '');
+  
+  return code.trim();
+  */
+
+  // === PLACEHOLDER-IMPLEMENTERING ===
+  // Detta är en provisorisk lösning som genererar PlantUML baserat på nyckelord.
+  // Ersätt med koden ovan (eller annan LLM) för faktisk AI-generering.
+  console.warn(
+    '[AI-Assistent] Använder placeholder-respons. Konfigurera en riktig LLM-API-nyckel i .env och avkommentera OpenAI-koden i src/services/ai.ts'
+  );
+
+  return generatePlaceholderPlantUml(description);
 }
 
-const Editor: React.FC<EditorProps> = ({
-  initialCode = '@startuml\nAlice -> Bob: Hello!\n@enduml',
-}) => {
-  const [code, setCode] = useState(initialCode);
-  const [previewSrc, setPreviewSrc] = useState('');
-  const [aiDescription, setAiDescription] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [explanation, setExplanation] = useState<string | null>(null);
-  const [isExplaining, setIsExplaining] = useState(false);
-  const debounceTimerRef = useRef<number | null>(null);
+/**
+ * Placeholder: genererar enkelt PlantUML baserat på nyckelord i beskrivningen.
+ */
+function generatePlaceholderPlantUml(description: string): string {
+  const lower = description.toLowerCase();
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newCode = e.target.value;
-    setCode(newCode);
+  if (lower.includes('sekvens') || lower.includes('sequence')) {
+    return `@startuml
+actor Kunde
+participant "Webbutik" as Web
+participant "Betalsystem" as Payment
+Kunde -> Web: Gör beställning
+Web -> Payment: Begär betalning
+Payment --> Web: Bekräftelse
+Web --> Kunde: Beställningsbekräftelse
+@enduml`;
+  }
 
-    if (debounceTimerRef.current) {
-      window.clearTimeout(debounceTimerRef.current);
-    }
+  if (lower.includes('klass') || lower.includes('class')) {
+    return `@startuml
+class Animal {
+  +name: string
+  +age: number
+  +speak(): void
+}
+class Dog {
+  +breed: string
+  +fetch(): void
+}
+Animal <|-- Dog
+@enduml`;
+  }
 
-    debounceTimerRef.current = window.setTimeout(() => {
-      const encoded = btoa(unescape(encodeURIComponent(newCode)));
-      setPreviewSrc(`https://www.plantuml.com/plantuml/svg/${encoded}`);
-    }, 800);
-  };
+  if (lower.includes('aktivitet') || lower.includes('activity')) {
+    return `@startuml
+start
+:Användaren öppnar appen;
+if (Inloggad?) then (ja)
+  :Visa innehåll;
+else (nej)
+  :Visa inloggningsformulär;
+endif
+stop
+@enduml`;
+  }
 
-  const handleAiGenerate = async () => {
-    if (!aiDescription.trim()) return;
+  // Default fallback
+  return `@startuml
+title AI-genererat diagram
+actor Användare
+participant System
+Användare -> System: Begäran om diagram
+System --> Användare: Diagram visat
+note right: Detta diagram genererades av AI-assistenten utifrån din textbeskrivning.\nKonfigurera en riktig LLM för bättre resultat.
+@enduml`;
+}
 
-    setIsGenerating(true);
-    try {
-      const generatedCode = await generatePlantUmlFromDescription(aiDescription);
-      setCode(generatedCode);
-      setExplanation(null);
+// ================================================================
+// AI-förklaring: Tar PlantUML-kod och returnerar en textförklaring
+// ================================================================
+export async function explainPlantUmlToText(plantUmlCode: string): Promise<string> {
+  /*
+  // === FAKTISK OPENAI-INTEGRATION (avkommentera och sätt in API-nyckel) ===
+  
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'AI-API-nyckel saknas. Skapa en .env-fil med VITE_OPENAI_API_KEY="sk-din-nyckel-här".'
+    );
+  }
 
-      // Omedelbar preview-uppdatering för genererad kod
-      const encoded = btoa(unescape(encodeURIComponent(generatedCode)));
-      setPreviewSrc(`https://www.plantuml.com/plantuml/svg/${encoded}`);
-    } catch (error) {
-      console.error('Misslyckades med att generera PlantUML-kod:', error);
-      alert(
-        'Ett fel inträffade vid AI-generering. Kontrollera konsolen för detaljer.'
-      );
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Du är en expert på PlantUML och UML-diagram. Förklara på svenska vad diagrammet visar. Beskriv vilka aktörer/komponenter som finns, vad flödet eller relationerna är, och vilken typ av diagram det är (sekvens, klass, aktivitet etc.). Var tydlig och pedagogisk.',
+        },
+        {
+          role: 'user',
+          content: `Förklara vad följande PlantUML-diagram visar:\n\n${plantUmlCode}`,
+        },
+      ],
+      temperature: 0.2,
+    }),
+  });
 
-  const handleExplainDiagram = async () => {
-    if (!code.trim()) return;
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`AI API misslyckades (${response.status}): ${errText}`);
+  }
 
-    setIsExplaining(true);
-    try {
-      const textExplanation = await explainPlantUmlToText(code);
-      setExplanation(textExplanation);
-    } catch (error) {
-      console.error('Misslyckades med att förklara diagrammet:', error);
-      alert(
-        'Ett fel inträffade vid AI-förklaring. Kontrollera konsolen för detaljer.'
-      );
-    } finally {
-      setIsExplaining(false);
-    }
-  };
+  const data = await response.json();
+  return (data.choices?.[0]?.message?.content || '').trim();
+  */
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
-      {/* AI-Assistent panel */}
-      <div
-        style={{
-          padding: '12px',
-          backgroundColor: '#f0f7ff',
-          borderRadius: '8px',
-          border: '1px solid #cce5ff',
-        }}
-      >
-        <h3
-          style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#0066cc' }}
-        >
-          🤖 AI-Assistent
-        </h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input
-            type="text"
-            value={aiDescription}
-            onChange={(e) => setAiDescription(e.target.value)}
-            placeholder="Beskriv diagrammet (t.ex. &quot;sekvensdiagram mellan kund och webbutik&quot;)..."
-            style={{
-              flex: 1,
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '13px',
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !isGenerating) handleAiGenerate();
-            }}
-          />
-          <button
-            onClick={handleAiGenerate}
-            disabled={isGenerating || !aiDescription.trim()}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: isGenerating ? '#ccc' : '#0066cc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor:
-                isGenerating || !aiDescription.trim()
-                  ? 'not-allowed'
-                  : 'pointer',
-              fontSize: '13px',
-              fontWeight: 'bold',
-            }}
-          >
-            {isGenerating ? 'Genererar...' : 'Generera'}
-          </button>
-        </div>
-      </div>
-
-      {/* PlantUML-editor och förhandsgranskning */}
-      <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
-        <textarea
-          value={code}
-          onChange={handleCodeChange}
-          style={{
-            flex: 1,
-            padding: '12px',
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            resize: 'none',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-          }}
-          placeholder="Skriv PlantUML-kod här..."
-        />
-        <div
-          style={{
-            flex: 1,
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            padding: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#fafafa',
-          }}
-        >
-          {previewSrc ? (
-            <img
-              src={previewSrc}
-              alt="PlantUML Preview"
-              style={{ maxWidth: '100%', maxHeight: '100%' }}
-            />
-          ) : (
-            <p style={{ color: '#999' }}>Förhandsgranskning genereras...</p>
-          )}
-        </div>
-      </div>
-
-      {/* Förklara diagram-knapp och förklaring */}
-      <div
-        style={{
-          padding: '12px',
-          backgroundColor: '#f0fff7',
-          borderRadius: '8px',
-          border: '1px solid #c6f6d5',
-        }}
-      >
-        <h3
-          style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#276749' }}
-        >
-          📖 Diagramförklaring
-        </h3>
-        <button
-          onClick={handleExplainDiagram}
-          disabled={isExplaining || !code.trim()}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: isExplaining ? '#ccc' : '#276749',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor:
-              isExplaining || !code.trim()
-                ? 'not-allowed'
-                : 'pointer',
-            fontSize: '13px',
-            fontWeight: 'bold',
-          }}
-        >
-          {isExplaining ? 'Förklarar...' : '🔍 Förklara diagram'}
-        </button>
-
-        {explanation !== null && (
-          <div
-            style={{
-              marginTop: '8px',
-              padding: '10px',
-              backgroundColor: '#ffffff',
-              borderRadius: '4px',
-              border: '1px solid #d1fae5',
-              whiteSpace: 'pre-wrap',
-              fontSize: '13px',
-              lineHeight: '1.5',
-              color: '#2d3748',
-            }}
-          >
-            {explanation}
-          </div>
-        )}
-      </div>
-    </div>
+  // === PLACEHOLDER-IMPLEMENTERING ===
+  console.warn(
+    '[AI-Förklaring] Använder placeholder-respons. Konfigurera en riktig LLM-API-nyckel i .env och avkommentera OpenAI-koden i src/services/ai.ts'
   );
-};
 
-export default Editor;
+  return generatePlaceholderExplanation(plantUmlCode);
+}
+
+/**
+ * Placeholder: genererar en enkel textförklaring baserat på PlantUML-kod.
+ */
+function generatePlaceholderExplanation(plantUmlCode: string): string {
+  const lower = plantUmlCode.toLowerCase();
+
+  if (lower.includes('actor') || lower.includes('participant')) {
+    return 'Detta är ett sekvensdiagram som visar interaktion mellan olika aktörer/komponenter. Diagrammet beskriver flödet av meddelanden eller anrop mellan dessa deltagare i en specifik ordning. '; // Placeholder – ersätt med faktisk AI-nedanalys';
+  }
+
+  if (lower.includes('class')) {
+    return 'Detta är ett klassdiagram som visar klasser, deras attribut och metoder, samt relationer mellan dem (t.ex. arv, sammansättning eller association). '; // Placeholder – ersätt med faktisk AI-nedanalys';
+  }
+
+  if (lower.includes('start') || lower.includes('stop')) {
+    return 'Detta är ett aktivitetsdiagram som visar flödet av aktiviteter i en process, inklusive decision-punkter och grenar. '; // Placeholder – ersätt med faktisk AI-nedanalys';
+  }
+
+  return 'Detta är ett PlantUML-diagram. Analysen visar att det innehåller flera komponenter med olika relationer. (Placeholder-respons – konfigurera en LLM för fullständig AI-förklaring.)';
+}

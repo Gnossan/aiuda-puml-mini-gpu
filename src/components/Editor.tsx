@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { generatePlantUmlFromDescription } from '../services/ai';
+import { generatePlantUmlFromDescription, explainPlantUmlToText } from '../services/ai';
 
 export interface EditorProps {
   initialCode?: string;
@@ -12,6 +12,8 @@ const Editor: React.FC<EditorProps> = ({
   const [previewSrc, setPreviewSrc] = useState('');
   const [aiDescription, setAiDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [isExplaining, setIsExplaining] = useState(false);
   const debounceTimerRef = useRef<number | null>(null);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -35,6 +37,7 @@ const Editor: React.FC<EditorProps> = ({
     try {
       const generatedCode = await generatePlantUmlFromDescription(aiDescription);
       setCode(generatedCode);
+      setExplanation(null);
 
       // Omedelbar preview-uppdatering för genererad kod
       const encoded = btoa(unescape(encodeURIComponent(generatedCode)));
@@ -46,6 +49,23 @@ const Editor: React.FC<EditorProps> = ({
       );
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleExplainDiagram = async () => {
+    if (!code.trim()) return;
+
+    setIsExplaining(true);
+    try {
+      const textExplanation = await explainPlantUmlToText(code);
+      setExplanation(textExplanation);
+    } catch (error) {
+      console.error('Misslyckades med att förklara diagrammet:', error);
+      alert(
+        'Ett fel inträffade vid AI-förklaring. Kontrollera konsolen för detaljer.'
+      );
+    } finally {
+      setIsExplaining(false);
     }
   };
 
@@ -90,7 +110,8 @@ const Editor: React.FC<EditorProps> = ({
               backgroundColor: isGenerating ? '#ccc' : '#0066cc',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',n              cursor:
+              borderRadius: '4px',
+              cursor:
                 isGenerating || !aiDescription.trim()
                   ? 'not-allowed'
                   : 'pointer',
@@ -141,6 +162,59 @@ const Editor: React.FC<EditorProps> = ({
             <p style={{ color: '#999' }}>Förhandsgranskning genereras...</p>
           )}
         </div>
+      </div>
+
+      {/* Förklara diagram-knapp och förklaring */}
+      <div
+        style={{
+          padding: '12px',
+          backgroundColor: '#f0fff7',
+          borderRadius: '8px',
+          border: '1px solid #c6f6d5',
+        }}
+      >
+        <h3
+          style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#276749' }}
+        >
+          📖 Diagramförklaring
+        </h3>
+        <button
+          onClick={handleExplainDiagram}
+          disabled={isExplaining || !code.trim()}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: isExplaining ? '#ccc' : '#276749',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor:
+              isExplaining || !code.trim()
+                ? 'not-allowed'
+                : 'pointer',
+            fontSize: '13px',
+            fontWeight: 'bold',
+          }}
+        >
+          {isExplaining ? 'Förklarar...' : '🔍 Förklara diagram'}
+        </button>
+
+        {explanation !== null && (
+          <div
+            style={{
+              marginTop: '8px',
+              padding: '10px',
+              backgroundColor: '#ffffff',
+              borderRadius: '4px',
+              border: '1px solid #d1fae5',
+              whiteSpace: 'pre-wrap',
+              fontSize: '13px',
+              lineHeight: '1.5',
+              color: '#2d3748',
+            }}
+          >
+            {explanation}
+          </div>
+        )}
       </div>
     </div>
   );
