@@ -36,6 +36,8 @@ header {
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 h2 {
@@ -43,8 +45,29 @@ h2 {
   color: #2c3e50;
 }
 
+.example-selectors {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.example-selectors button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #bdc3c7;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.example-selectors button:hover {
+  background: #ecf0f1;
+}
+
 textarea {
   width: 100%;
+  flex: 1;
+  min-height: 250px;
   padding: 0.5rem;
   font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 14px;
@@ -59,6 +82,10 @@ textarea {
   border-radius: 4px;
   text-align: center;
   color: #7f8c8d;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .placeholder code {
@@ -74,4 +101,30 @@ textarea {
   margin-top: 0.5rem;
   font-size: 0.85rem;
   color: #7f8c8d;
+}
+
+.image-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 4px;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
 }
